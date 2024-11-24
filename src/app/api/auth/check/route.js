@@ -19,16 +19,24 @@ export async function GET() {
       ));
     }
 
-    const decoded = jwt.verify(token.value, process.env.JWT_SECRET);
-    
-    return corsResponse(NextResponse.json(
-      { message: 'Authenticated' },
-      { status: 200 }
-    ));
+    try {
+      const decoded = jwt.verify(token.value, process.env.JWT_SECRET);
+      return corsResponse(NextResponse.json(
+        { message: 'Authenticated', user: decoded },
+        { status: 200 }
+      ));
+    } catch (jwtError) {
+      console.error('JWT Verification failed:', jwtError);
+      return corsResponse(NextResponse.json(
+        { message: 'Invalid token' },
+        { status: 401 }
+      ));
+    }
   } catch (error) {
+    console.error('Auth check error:', error);
     return corsResponse(NextResponse.json(
-      { message: 'Not authenticated' },
-      { status: 401 }
+      { message: 'Authentication error' },
+      { status: 500 }
     ));
   }
 } 

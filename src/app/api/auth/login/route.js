@@ -14,20 +14,20 @@ export async function POST(request) {
     await connectDB();
     const { email, password } = await request.json();
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email }).select('+password');
     if (!user) {
-      return NextResponse.json(
+      return corsResponse(NextResponse.json(
         { message: 'Invalid credentials' },
         { status: 401 }
-      );
+      ));
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return NextResponse.json(
+      return corsResponse(NextResponse.json(
         { message: 'Invalid credentials' },
         { status: 401 }
-      );
+      ));
     }
 
     const token = jwt.sign(
@@ -37,15 +37,16 @@ export async function POST(request) {
     );
 
     const response = NextResponse.json(
-      { message: 'Login successful' },
+      { message: 'Login successful', user: { id: user._id, email: user.email } },
       { status: 200 }
     );
 
     response.cookies.set('token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 60 * 60 * 24 * 7, // 7 days
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 7,
+      path: '/',
     });
 
     return corsResponse(response);

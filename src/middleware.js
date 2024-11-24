@@ -1,33 +1,22 @@
 import { NextResponse } from 'next/server'
-import { corsHeaders } from './config/cors'
 
 export function middleware(request) {
-  // Check if the request is for an API route
-  if (request.nextUrl.pathname.startsWith('/api')) {
-    // Handle preflight requests
-    if (request.method === 'OPTIONS') {
-      return new NextResponse(null, {
-        status: 200,
-        headers: corsHeaders,
-      })
-    }
+  // Get the origin from environment variable or use a default value
+  const allowedOrigin = process.env.NEXT_PUBLIC_FRONTEND_URL || '*';
 
-    // Handle actual requests
-    const response = NextResponse.next()
-    
-    // Apply CORS headers from our config
-    Object.entries(corsHeaders).forEach(([key, value]) => {
-      response.headers.set(key, value)
-    })
-
-    return response
+  // Handle preflight requests
+  if (request.method === 'OPTIONS') {
+    const response = new NextResponse(null, { status: 200 });
+    response.headers.set('Access-Control-Allow-Origin', allowedOrigin);
+    response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, Cookie');
+    response.headers.set('Access-Control-Allow-Credentials', 'true');
+    return response;
   }
 
-  return NextResponse.next()
+  return NextResponse.next();
 }
 
 export const config = {
-  matcher: [
-    '/api/:path*',  // Only match API routes
-  ],
-} 
+  matcher: '/api/:path*',
+}; 
