@@ -3,6 +3,11 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import User from '@/models/User';
 import connectDB from '@/lib/mongodb';
+import { corsResponse, handleOptions } from '@/utils/cors-response';
+
+export async function OPTIONS() {
+  return handleOptions();
+}
 
 export async function POST(request) {
   try {
@@ -43,12 +48,12 @@ export async function POST(request) {
       maxAge: 60 * 60 * 24 * 7, // 7 days
     });
 
-    return response;
+    return corsResponse(response);
   } catch (error) {
     console.error('Login error:', error);
-    return NextResponse.json(
+    return corsResponse(NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }
-    );
+    ));
   }
 } 

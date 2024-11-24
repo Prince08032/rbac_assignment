@@ -2,6 +2,11 @@ import { NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import User from '@/models/User';
 import bcrypt from 'bcryptjs';
+import { corsResponse, handleOptions } from '@/utils/cors-response';
+
+export async function OPTIONS() {
+  return handleOptions();
+}
 
 export async function GET() {
   try {
@@ -10,10 +15,9 @@ export async function GET() {
       .populate('roles')
       .populate('permissions')
       .lean();
-    return NextResponse.json(users || []);
+    return corsResponse(NextResponse.json(users || []));
   } catch (error) {
-    console.error('API Error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return corsResponse(NextResponse.json({ error: error.message }, { status: 500 }));
   }
 }
 
@@ -32,9 +36,9 @@ export async function POST(request) {
     const userResponse = { ...user.toObject() };
     delete userResponse.password;
     
-    return NextResponse.json(userResponse);
+    return corsResponse(NextResponse.json(userResponse));
   } catch (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return corsResponse(NextResponse.json({ error: error.message }, { status: 500 }));
   }
 }
 
@@ -47,10 +51,10 @@ export async function PUT(request) {
     // Find existing user first
     const existingUser = await User.findById(_id);
     if (!existingUser) {
-      return NextResponse.json(
+      return corsResponse(NextResponse.json(
         { error: 'User not found' },
         { status: 404 }
-      );
+      ));
     }
 
     // Create update object with basic fields
@@ -78,12 +82,12 @@ export async function PUT(request) {
       }
     ).populate('roles');
 
-    return NextResponse.json(updatedUser);
+    return corsResponse(NextResponse.json(updatedUser));
   } catch (error) {
     console.error('Update error:', error);
-    return NextResponse.json(
+    return corsResponse(NextResponse.json(
       { error: error.message },
       { status: 500 }
-    );
+    ));
   }
 } 

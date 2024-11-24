@@ -1,15 +1,19 @@
 import { NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import Permission from '@/models/Permission';
+import { corsResponse, handleOptions } from '@/utils/cors-response';
+
+export async function OPTIONS() {
+  return handleOptions();
+}
 
 export async function GET() {
   try {
     await connectDB();
     const permissions = await Permission.find({}).lean();
-    return NextResponse.json(permissions || []);
+    return corsResponse(NextResponse.json(permissions || []));
   } catch (error) {
-    console.error('API Error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return corsResponse(NextResponse.json({ error: error.message }, { status: 500 }));
   }
 }
 
@@ -18,9 +22,8 @@ export async function POST(request) {
     await connectDB();
     const data = await request.json();
     const permission = await Permission.create(data);
-    return NextResponse.json(permission);
+    return corsResponse(NextResponse.json(permission));
   } catch (error) {
-    console.error('API Error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return corsResponse(NextResponse.json({ error: error.message }, { status: 500 }));
   }
 } 
