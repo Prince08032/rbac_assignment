@@ -3,6 +3,11 @@ import jwt from 'jsonwebtoken';
 import { cookies } from 'next/headers';
 import User from '@/models/User';
 import connectDB from '@/lib/mongodb';
+import { corsResponse, handleOptions } from '@/utils/cors-response';
+
+export async function OPTIONS() {
+  return handleOptions();
+}
 
 export async function GET() {
   try {
@@ -10,10 +15,10 @@ export async function GET() {
     const token = cookieStore.get('token');
 
     if (!token) {
-      return NextResponse.json(
+      return corsResponse(NextResponse.json(
         { message: 'Not authenticated' },
         { status: 401 }
-      );
+      ));
     }
 
     const decoded = jwt.verify(token.value, process.env.JWT_SECRET);
@@ -24,17 +29,17 @@ export async function GET() {
       .populate('roles');
 
     if (!user) {
-      return NextResponse.json(
+      return corsResponse(NextResponse.json(
         { message: 'User not found' },
         { status: 404 }
-      );
+      ));
     }
 
-    return NextResponse.json(user);
+    return corsResponse(NextResponse.json(user));
   } catch (error) {
-    return NextResponse.json(
+    return corsResponse(NextResponse.json(
       { message: 'Not authenticated' },
       { status: 401 }
-    );
+    ));
   }
 } 

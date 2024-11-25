@@ -3,6 +3,11 @@ import connectDB from '@/lib/mongodb';
 import Role from '@/models/Role';
 import Permission from '@/models/Permission';
 import mongoose from 'mongoose';
+import { corsResponse, handleOptions } from '@/utils/cors-response';
+
+export async function OPTIONS() {
+  return handleOptions();
+}
 
 export async function PUT(request, { params }) {
   try {
@@ -13,9 +18,9 @@ export async function PUT(request, { params }) {
     // Validate permission IDs
     const permissionIds = data.permissions || [];
     if (!permissionIds.every(id => mongoose.Types.ObjectId.isValid(id))) {
-      return NextResponse.json({ 
+      return corsResponse(NextResponse.json({ 
         error: 'Invalid permission ID format' 
-      }, { status: 400 });
+      }, { status: 400 }));
     }
 
     // Check if permissions exist
@@ -24,9 +29,9 @@ export async function PUT(request, { params }) {
     });
     
     if (permissions.length !== permissionIds.length) {
-      return NextResponse.json({ 
+      return corsResponse(NextResponse.json({ 
         error: 'One or more permission IDs are invalid' 
-      }, { status: 400 });
+      }, { status: 400 }));
     }
 
     const role = await Role.findByIdAndUpdate(
@@ -36,13 +41,13 @@ export async function PUT(request, { params }) {
     ).populate('permissions');
 
     if (!role) {
-      return NextResponse.json({ error: 'Role not found' }, { status: 404 });
+      return corsResponse(NextResponse.json({ error: 'Role not found' }, { status: 404 }));
     }
 
-    return NextResponse.json(role);
+    return corsResponse(NextResponse.json(role));
   } catch (error) {
     console.error('API Error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return corsResponse(NextResponse.json({ error: error.message }, { status: 500 }));
   }
 }
 
@@ -53,12 +58,12 @@ export async function DELETE(request, { params }) {
     const role = await Role.findByIdAndDelete(id);
     
     if (!role) {
-      return NextResponse.json({ error: 'Role not found' }, { status: 404 });
+      return corsResponse(NextResponse.json({ error: 'Role not found' }, { status: 404 }));
     }
 
-    return NextResponse.json({ message: 'Role deleted successfully' });
+    return corsResponse(NextResponse.json({ message: 'Role deleted successfully' }));
   } catch (error) {
     console.error('API Error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return corsResponse(NextResponse.json({ error: error.message }, { status: 500 }));
   }
 } 

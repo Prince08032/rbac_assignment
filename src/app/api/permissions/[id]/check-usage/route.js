@@ -1,13 +1,17 @@
 import { NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import Role from '@/models/Role';
+import { corsResponse, handleOptions } from '@/utils/cors-response';
+
+export async function OPTIONS() {
+  return handleOptions();
+}
 
 export async function GET(request, { params }) {
   try {
     await connectDB();
     const { id } = params;
 
-    // Find all roles that use this permission
     const rolesWithPermission = await Role.find({
       permissions: id
     }).select('name');
@@ -15,13 +19,13 @@ export async function GET(request, { params }) {
     const isLinked = rolesWithPermission.length > 0;
     const linkedRoles = rolesWithPermission.map(role => role.name);
 
-    return NextResponse.json({
+    return corsResponse(NextResponse.json({
       isLinked,
       linkedRoles,
       count: rolesWithPermission.length
-    });
+    }));
   } catch (error) {
     console.error('API Error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return corsResponse(NextResponse.json({ error: error.message }, { status: 500 }));
   }
 } 

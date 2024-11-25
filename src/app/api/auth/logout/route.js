@@ -1,4 +1,9 @@
 import { NextResponse } from 'next/server';
+import { corsResponse, handleOptions } from '@/utils/cors-response';
+
+export async function OPTIONS() {
+  return handleOptions();
+}
 
 export async function POST() {
   const response = NextResponse.json(
@@ -6,8 +11,6 @@ export async function POST() {
     { status: 200 }
   );
 
-  // Clear the auth token cookie
   response.cookies.delete('token');
-
-  return response;
+  return corsResponse(response);
 } 
