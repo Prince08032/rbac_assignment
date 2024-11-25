@@ -3,18 +3,10 @@ import connectDB from '@/lib/mongodb';
 import Role from '@/models/Role';
 import Permission from '@/models/Permission';
 import mongoose from 'mongoose';
+import { corsResponse, handleOptions } from '@/utils/cors-response';
 
-// Helper function to add CORS headers
-function corsResponse(response) {
-  response.headers.set('Access-Control-Allow-Origin', '*');
-  response.headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  response.headers.set('Access-Control-Allow-Headers', 'Content-Type');
-  return response;
-}
-
-// Handle OPTIONS request for CORS preflight
 export async function OPTIONS() {
-  return corsResponse(new NextResponse(null, { status: 200 }));
+  return handleOptions();
 }
 
 export async function GET() {

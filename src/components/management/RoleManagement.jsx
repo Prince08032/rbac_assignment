@@ -6,12 +6,12 @@ import { CSS } from '@dnd-kit/utilities';
 import Button from "../ui/Button";
 import Modal from "../ui/Modal";
 import EntityForm from '../common/EntityForm';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import EmptyState from '../ui/EmptyState';
 import { FiShield } from 'react-icons/fi';
 import Swal from 'sweetalert2';
 
-const SortableRole = ({ role, onDelete, onEdit }) => {
+const SortableRole = ({ role, onDelete, onEdit, currentUser }) => {
   const {
     attributes,
     listeners,
@@ -24,6 +24,8 @@ const SortableRole = ({ role, onDelete, onEdit }) => {
     transform: CSS.Transform.toString(transform),
     transition,
   };
+
+  const isAdmin = currentUser?.roles?.some(role => role.name === 'admin' || role.name === 'Admin');
 
   return (
     <div
@@ -48,30 +50,32 @@ const SortableRole = ({ role, onDelete, onEdit }) => {
             ))}
           </div>
         </div>
-        <div className="flex space-x-2">
-          <Button 
-            variant="secondary" 
-            className="p-2"
-            onClick={(e) => {
-              e.stopPropagation(); // Prevent drag event
-              onEdit(role);
-            }}
-            disabled={role.isProcessing}
-          >
-            <FiEdit className="h-4 w-4" />
-          </Button>
-          <Button 
-            variant="danger" 
-            className="p-2"
-            onClick={(e) => {
-              e.stopPropagation();
-              onDelete(role._id);
-            }}
-            disabled={role.isProcessing}
-          >
-            <FiTrash2 className="h-4 w-4" />
-          </Button>
-        </div>
+        {isAdmin && (
+          <div className="flex space-x-2">
+            <Button 
+              variant="secondary" 
+              className="p-2"
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit(role);
+              }}
+              disabled={role.isProcessing}
+            >
+              <FiEdit className="h-4 w-4" />
+            </Button>
+            <Button 
+              variant="danger" 
+              className="p-2"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete(role._id);
+              }}
+              disabled={role.isProcessing}
+            >
+              <FiTrash2 className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -81,6 +85,23 @@ const RoleManagement = ({ roles = [], onDelete, onDragEnd, onSubmit }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingRole, setEditingRole] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
+
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      try {
+        const response = await fetch('/api/auth/user');
+        if (response.ok) {
+          const userData = await response.json();
+          setCurrentUser(userData);
+        }
+      } catch (error) {
+        console.error('Error fetching current user:', error);
+      }
+    };
+
+    fetchCurrentUser();
+  }, []);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -178,13 +199,17 @@ const RoleManagement = ({ roles = [], onDelete, onDragEnd, onSubmit }) => {
     }
   };
 
+  const isAdmin = currentUser?.roles?.some(role => role.name === 'admin' || role.name === 'Admin');
+
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Role Management</h2>
-        <Button onClick={handleAddRole} disabled={isProcessing}>
-          <FiPlus /> Add Role
-        </Button>
+        {isAdmin && (
+          <Button onClick={handleAddRole} disabled={isProcessing}>
+            <FiPlus /> Add Role
+          </Button>
+        )}
       </div>
 
       {roles.length > 0 ? (
@@ -204,6 +229,7 @@ const RoleManagement = ({ roles = [], onDelete, onDragEnd, onSubmit }) => {
                   role={role}
                   onDelete={handleDeleteRole}
                   onEdit={handleEditRole}
+                  currentUser={currentUser}
                 />
               ))}
             </div>

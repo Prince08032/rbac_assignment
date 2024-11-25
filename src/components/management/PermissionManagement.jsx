@@ -3,7 +3,7 @@ import { FiPlus, FiEdit, FiTrash2 } from "react-icons/fi";
 import Button from "../ui/Button";
 import Modal from "../ui/Modal";
 import EntityForm from '../common/EntityForm';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import EmptyState from '../ui/EmptyState';
 import { FiKey } from 'react-icons/fi';
 import Swal from 'sweetalert2';
@@ -12,6 +12,25 @@ const PermissionManagement = ({ permissions = [], onDelete, onSubmit }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPermission, setEditingPermission] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
+
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      try {
+        const response = await fetch('/api/auth/user');
+        if (response.ok) {
+          const userData = await response.json();
+          setCurrentUser(userData);
+        }
+      } catch (error) {
+        console.error('Error fetching current user:', error);
+      }
+    };
+
+    fetchCurrentUser();
+  }, []);
+
+  const isAdmin = currentUser?.roles?.some(role => role.name === 'admin' || role.name === 'Admin');
 
   const handleAddPermission = () => {
     if (isProcessing) return;
@@ -88,9 +107,11 @@ const PermissionManagement = ({ permissions = [], onDelete, onSubmit }) => {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Permission Management</h2>
-        <Button onClick={handleAddPermission} disabled={isProcessing}>
-          <FiPlus /> Add Permission
-        </Button>
+        {isAdmin && (
+          <Button onClick={handleAddPermission} disabled={isProcessing}>
+            <FiPlus /> Add Permission
+          </Button>
+        )}
       </div>
 
       {permissions.length > 0 ? (
@@ -108,24 +129,26 @@ const PermissionManagement = ({ permissions = [], onDelete, onSubmit }) => {
                     {permission.module}
                   </span>
                 </div>
-                <div className="flex space-x-2">
-                  <Button 
-                    variant="secondary" 
-                    className="p-2" 
-                    onClick={() => handleEditPermission(permission)}
-                    disabled={isProcessing}
-                  >
-                    <FiEdit className="h-4 w-4" />
-                  </Button>
-                  <Button 
-                    variant="danger" 
-                    className="p-2"
-                    onClick={() => handleDeletePermission(permission._id)}
-                    disabled={isProcessing}
-                  >
-                    <FiTrash2 className="h-4 w-4" />
-                  </Button>
-                </div>
+                {isAdmin && (
+                  <div className="flex space-x-2">
+                    <Button 
+                      variant="secondary" 
+                      className="p-2" 
+                      onClick={() => handleEditPermission(permission)}
+                      disabled={isProcessing}
+                    >
+                      <FiEdit className="h-4 w-4" />
+                    </Button>
+                    <Button 
+                      variant="danger" 
+                      className="p-2"
+                      onClick={() => handleDeletePermission(permission._id)}
+                      disabled={isProcessing}
+                    >
+                      <FiTrash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
               </div>
             </div>
           ))}

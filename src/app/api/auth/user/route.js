@@ -15,10 +15,10 @@ export async function GET() {
     const token = cookieStore.get('token');
 
     if (!token) {
-      return corsResponse(NextResponse.json(
+      return NextResponse.json(
         { message: 'Not authenticated' },
         { status: 401 }
-      ));
+      );
     }
 
     const decoded = jwt.verify(token.value, process.env.JWT_SECRET);
@@ -29,17 +29,17 @@ export async function GET() {
       .populate('roles');
 
     if (!user) {
-      return corsResponse(NextResponse.json(
+      return NextResponse.json(
         { message: 'User not found' },
         { status: 404 }
-      ));
+      );
     }
 
-    return corsResponse(NextResponse.json(user));
+    return NextResponse.json(user);
   } catch (error) {
-    return corsResponse(NextResponse.json(
+    return NextResponse.json(
       { message: 'Not authenticated' },
       { status: 401 }
-    ));
+    );
   }
 } 

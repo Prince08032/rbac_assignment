@@ -22,6 +22,13 @@ export async function POST(request) {
       ));
     }
 
+    if (user.status !== 'Active') {
+      return corsResponse(NextResponse.json(
+        { message: 'Account is not active. Please contact administrator.' },
+        { status: 403 }
+      ));
+    }
+
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return corsResponse(NextResponse.json(

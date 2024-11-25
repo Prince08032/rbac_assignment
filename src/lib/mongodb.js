@@ -9,12 +9,19 @@ if (!MONGODB_URI) {
 let cached = global.mongoose;
 
 if (!cached) {
-  cached = global.mongoose = { conn: null, promise: null };
+  cached = global.mongoose = { 
+    conn: null, 
+    promise: null,
+    isConnected: false 
+  };
 }
 
 async function connectDB() {
   if (cached.conn) {
-    return cached.conn;
+    return { 
+      connection: cached.conn,
+      isConnected: cached.isConnected 
+    };
   }
 
   if (!cached.promise) {
@@ -27,9 +34,11 @@ async function connectDB() {
     try {
       cached.promise = mongoose.connect(MONGODB_URI, opts);
       cached.conn = await cached.promise;
+      cached.isConnected = true;
       console.log('MongoDB connected successfully');
     } catch (e) {
       cached.promise = null;
+      cached.isConnected = false;
       console.error('MongoDB connection error:', e);
       throw e;
     }
@@ -39,10 +48,24 @@ async function connectDB() {
     await cached.promise;
   } catch (e) {
     cached.promise = null;
+    cached.isConnected = false;
     throw e;
   }
 
-  return cached.conn;
+  return { 
+    connection: cached.conn,
+    isConnected: cached.isConnected 
+  };
 }
+
+mongoose.connection.on('connected', () => {
+  cached.isConnected = true;
+  console.log('MongoDB connection established');
+});
+
+mongoose.connection.on('disconnected', () => {
+  cached.isConnected = false;
+  console.log('MongoDB connection lost');
+});
 
 export default connectDB; 

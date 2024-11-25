@@ -1,7 +1,29 @@
 import { FiEdit, FiTrash2 } from "react-icons/fi";
 import { Switch } from '@headlessui/react';
 
-const UserTable = ({ users, onDelete, onStatusChange, onEdit, onDeleteClick }) => {
+const UserTable = ({ users, onDelete, onStatusChange, onEdit, onDeleteClick, currentUserRoles }) => {
+  const hasEditPermission = () => {
+    return currentUserRoles?.some(role => 
+      role.name === "Admin" || role.name === "Editor"
+    );
+  };
+
+  const hasStatusTogglePermission = () => {
+    return currentUserRoles?.some(role => 
+      role.name === "Admin"
+    );
+  };
+
+  const StatusDisplay = ({ status }) => (
+    <span className={`text-xs font-medium ${
+      status === 'Active'
+        ? 'text-green-600 dark:text-green-400'
+        : 'text-red-500 dark:text-red-400'
+    }`}>
+      {status}
+    </span>
+  );
+
   const ToggleButton = ({ isActive, onChange, userId }) => (
     <div className="flex items-center gap-2">
       <Switch
@@ -17,13 +39,7 @@ const UserTable = ({ users, onDelete, onStatusChange, onEdit, onDeleteClick }) =
           } inline-block h-4 w-4 transform rounded-full bg-white transition-transform`}
         />
       </Switch>
-      <span className={`text-xs font-medium ${
-        isActive 
-          ? 'text-green-600 dark:text-green-400' 
-          : 'text-red-500 dark:text-red-400'
-      }`}>
-        {isActive ? 'ACTIVE' : 'INACTIVE'}
-      </span>
+      <StatusDisplay status={isActive ? 'Active' : 'Inactive'} />
     </div>
   );
 
@@ -86,27 +102,33 @@ const UserTable = ({ users, onDelete, onStatusChange, onEdit, onDeleteClick }) =
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <ToggleButton 
-                        isActive={user.status === "Active"}
-                        onChange={onStatusChange}
-                        userId={user._id}
-                      />
+                      {hasStatusTogglePermission() ? (
+                        <ToggleButton 
+                          isActive={user.status === "Active"}
+                          onChange={onStatusChange}
+                          userId={user._id}
+                        />
+                      ) : (
+                        <StatusDisplay status={user.status} />
+                      )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
-                      <div className="flex items-center justify-end space-x-2">
-                        <button 
-                          onClick={() => onEdit(user)}
-                          className="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300 p-2 hover:bg-blue-50 dark:hover:bg-blue-900/50 rounded-full"
-                        >
-                          <FiEdit className="h-4 w-4" />
-                        </button>
-                        <button 
-                          onClick={() => onDeleteClick(user._id)}
-                          className="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300 p-2 hover:bg-red-50 dark:hover:bg-red-900/50 rounded-full"
-                        >
-                          <FiTrash2 className="h-4 w-4" />
-                        </button>
-                      </div>
+                      {hasEditPermission() && (
+                        <div className="flex items-center justify-end space-x-2">
+                          <button 
+                            onClick={() => onEdit(user)}
+                            className="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300 p-2 hover:bg-blue-50 dark:hover:bg-blue-900/50 rounded-full"
+                          >
+                            <FiEdit className="h-4 w-4" />
+                          </button>
+                          <button 
+                            onClick={() => onDeleteClick(user._id)}
+                            className="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300 p-2 hover:bg-red-50 dark:hover:bg-red-900/50 rounded-full"
+                          >
+                            <FiTrash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -133,18 +155,22 @@ const UserTable = ({ users, onDelete, onStatusChange, onEdit, onDeleteClick }) =
                 </div>
               </div>
               <div className="flex items-center space-x-2">
-                <button 
-                  onClick={() => onEdit(user)}
-                  className="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300 p-2 hover:bg-blue-50 dark:hover:bg-blue-900/50 rounded-full"
-                >
-                  <FiEdit className="h-4 w-4" />
-                </button>
-                <button 
-                  onClick={() => onDeleteClick(user._id)}
-                  className="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300 p-2 hover:bg-red-50 dark:hover:bg-red-900/50 rounded-full"
-                >
-                  <FiTrash2 className="h-4 w-4" />
-                </button>
+                {hasEditPermission() && (
+                  <>
+                    <button 
+                      onClick={() => onEdit(user)}
+                      className="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300 p-2 hover:bg-blue-50 dark:hover:bg-blue-900/50 rounded-full"
+                    >
+                      <FiEdit className="h-4 w-4" />
+                    </button>
+                    <button 
+                      onClick={() => onDeleteClick(user._id)}
+                      className="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300 p-2 hover:bg-red-50 dark:hover:bg-red-900/50 rounded-full"
+                    >
+                      <FiTrash2 className="h-4 w-4" />
+                    </button>
+                  </>
+                )}
               </div>
             </div>
             <div className="mt-2">
@@ -158,11 +184,15 @@ const UserTable = ({ users, onDelete, onStatusChange, onEdit, onDeleteClick }) =
                   </span>
                 ))}
               </div>
-              <ToggleButton 
-                isActive={user.status === "Active"}
-                onChange={onStatusChange}
-                userId={user._id}
-              />
+              {hasStatusTogglePermission() ? (
+                <ToggleButton 
+                  isActive={user.status === "Active"}
+                  onChange={onStatusChange}
+                  userId={user._id}
+                />
+              ) : (
+                <StatusDisplay status={user.status} />
+              )}
             </div>
           </div>
         ))}

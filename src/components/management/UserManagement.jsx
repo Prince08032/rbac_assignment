@@ -123,13 +123,21 @@ const UserManagement = ({ users = [], onDelete, onSearch, onStatusChange, onSubm
     }
   };
 
+  const hasAddPermission = () => {
+    return currentUser?.roles?.some(role => 
+      role.name === "Admin"
+    );
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white">User Management</h2>
-        <Button onClick={handleAddUser} disabled={isProcessing}>
-          <FiPlus /> Add User
-        </Button>
+        {hasAddPermission() && (
+          <Button onClick={handleAddUser} disabled={isProcessing}>
+            <FiPlus /> Add User
+          </Button>
+        )}
       </div>
       
       {users.length > 0 ? (
@@ -146,7 +154,7 @@ const UserManagement = ({ users = [], onDelete, onSearch, onStatusChange, onSubm
               onStatusChange={onStatusChange}
               onEdit={handleEditUser}
               onDeleteClick={handleDeleteUser}
-              isAdminUser={isAdminUser}
+              currentUserRoles={currentUser?.roles}
             />
           ) : (
             <EmptyState

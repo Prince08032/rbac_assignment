@@ -24,6 +24,7 @@ const ActivityItem = ({ title, time, type }) => (
     <div className={`w-2 h-2 rounded-full ${
       type === 'create' ? 'bg-green-500' : 
       type === 'update' ? 'bg-blue-500' : 
+      type === 'inactive' ? 'bg-red-500' :
       'bg-red-500'
     }`} />
     <div className="flex-1">
@@ -37,7 +38,9 @@ export default function Home() {
   const [stats, setStats] = useState({
     users: 0,
     roles: 0,
-    permissions: 0
+    permissions: 0,
+    activeUsers: 0,
+    inactiveUsers: 0
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -65,10 +68,15 @@ export default function Home() {
         permissionsRes.json()
       ]);
 
+      const activeUsers = users.filter(user => user.status === 'active' || user.status === 'Active').length;
+      const inactiveUsers = users.length - activeUsers;
+
       setStats({
         users: users.length,
         roles: roles.length,
-        permissions: permissions.length
+        permissions: permissions.length,
+        activeUsers,
+        inactiveUsers
       });
     } catch (err) {
       console.error('Error fetching stats:', err);
@@ -148,9 +156,14 @@ export default function Home() {
             </div>
             <div className="space-y-1">
               <ActivityItem
-                title={`${stats.users} users in the system`}
+                title={`${stats.activeUsers} active users`}
                 time="Current Status"
                 type="create"
+              />
+              <ActivityItem
+                title={`${stats.inactiveUsers} inactive users`}
+                time="Current Status"
+                type="inactive"
               />
               <ActivityItem
                 title={`${stats.roles} roles configured`}
